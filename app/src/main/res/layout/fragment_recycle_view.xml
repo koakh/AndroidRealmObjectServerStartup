@@ -1,0 +1,21 @@
+<FrameLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  tools:context=".ui.fragments.RecycleViewFragment"
+  >
+
+  <EditText
+    android:id="@+id/et_text"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+     />
+
+  <com.koakh.androidrealmobjectserverstartup.view.RecyclerViewWithEmptyViewSupport
+    android:id="@+id/recyclerview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    />
+
+</FrameLayout>
