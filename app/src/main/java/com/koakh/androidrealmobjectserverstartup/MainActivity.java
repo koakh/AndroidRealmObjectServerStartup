@@ -4,30 +4,27 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.util.Log;
-import android.view.View;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.koakh.androidrealmobjectserverstartup.model.CRDTCounter;
-import com.koakh.androidrealmobjectserverstartup.model.User;
+import com.koakh.androidrealmobjectserverstartup.model.TimeStamp;
 import com.koakh.androidrealmobjectserverstartup.ui.fragments.DummyFragment;
 import com.koakh.androidrealmobjectserverstartup.ui.fragments.RecycleViewFragment;
 
-import java.util.UUID;
-
 import io.realm.Realm;
-import io.realm.RealmChangeListener;
-import io.realm.SyncConfiguration;
 import io.realm.SyncUser;
 
 public class MainActivity extends AppCompatActivity
@@ -38,10 +35,10 @@ public class MainActivity extends AppCompatActivity
   //Application
   private App mApp;
   //Application UI
-  DrawerLayout mDrawer;
-
+  private DrawerLayout mDrawer;
+  private TextView mTextView;
+  //Realm
   private Realm mRealm;
-  private SyncUser mSyncUser;
   private CRDTCounter counter;
 
   @Override
@@ -65,8 +62,16 @@ public class MainActivity extends AppCompatActivity
     fab.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-            .setAction("Action", null).show();
+        if (mTextView.getText() != null) {
+          mRealm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+              realm.createObject(TimeStamp.class).setTimeStamp(mTextView.getText().toString());
+            }
+          });
+          Snackbar.make(view, "Added Record to Realm", Snackbar.LENGTH_LONG)
+              .setAction("Action", null).show();
+        }
       }
     });
 
@@ -87,6 +92,12 @@ public class MainActivity extends AppCompatActivity
   protected void onStart() {
     super.onStart();
 
+    //Realm : Here After Fragment onCreate
+    mRealm = mApp.getRealm();
+    // Get Ui components
+    mTextView = (TextView) findViewById(R.id.textview_add);
+
+    /*
     mSyncUser = SyncUser.currentUser();
     if (mSyncUser != null) {
 
@@ -107,6 +118,7 @@ public class MainActivity extends AppCompatActivity
         }
       });
     }
+    */
   }
 
   @Override
@@ -114,7 +126,7 @@ public class MainActivity extends AppCompatActivity
     super.onStop();
     closeRealm();
 
-    mSyncUser = null;
+    mApp.setSyncUser(null);
   }
 
   @Override
@@ -142,8 +154,17 @@ public class MainActivity extends AppCompatActivity
     switch (item.getItemId()) {
       case R.id.action_logout:
         closeRealm();
-        mSyncUser.logout();
+        mApp.getSyncUser().logout();
         gotoLoginActivity();
+        return true;
+      case R.id.action_add:
+        final String timestamp = Long.toString(System.currentTimeMillis());
+        mRealm.executeTransactionAsync(new Realm.Transaction() {
+          @Override
+          public void execute(Realm realm) {
+            realm.createObject(TimeStamp.class).setTimeStamp(timestamp);
+          }
+        });
         return true;
       case R.id.action_settings:
         return true;
@@ -250,8 +271,11 @@ public class MainActivity extends AppCompatActivity
   }
 
   private void closeRealm() {
-    if (mRealm != null && !mRealm.isClosed()) {
-      mRealm.close();
+    //if (mRealm != null && !mRealm.isClosed()) {
+    //  mRealm.close();
+    //}
+    if (mApp.getRealm() != null && !mApp.getRealm().isClosed()) {
+      mApp.getRealm().close();
     }
   }
 
@@ -263,7 +287,7 @@ public class MainActivity extends AppCompatActivity
   private void adjustCounter(final int adjustment) {
     // A synchronized Realm can get written to at any point in time, so doing synchronous writes on the UI
     // thread is HIGHLY discouraged as it might block longer than intended. Only use async transactions.
-    mRealm.executeTransactionAsync(new Realm.Transaction() {
+    mApp.getRealm().executeTransactionAsync(new Realm.Transaction() {
       @Override
       public void execute(Realm realm) {
         CRDTCounter counter = realm.where(CRDTCounter.class).findFirst();

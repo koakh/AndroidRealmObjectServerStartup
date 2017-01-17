@@ -3,19 +3,29 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context=".ui.fragments.RecycleViewFragment"
-  >
+  tools:context=".ui.fragments.RecycleViewFragment">
 
-  <EditText
-    android:id="@+id/et_text"
+  <LinearLayout
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-     />
+    android:layout_height="match_parent">
 
-  <com.koakh.androidrealmobjectserverstartup.view.RecyclerViewWithEmptyViewSupport
-    android:id="@+id/recyclerview"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    />
+    <EditText
+      android:id="@+id/textview_add"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"/>
 
+    <ScrollView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical">
+
+      <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:background="@null"
+        android:layout_height="match_parent"/>
+
+    </ScrollView>
+  </LinearLayout>
 </FrameLayout>

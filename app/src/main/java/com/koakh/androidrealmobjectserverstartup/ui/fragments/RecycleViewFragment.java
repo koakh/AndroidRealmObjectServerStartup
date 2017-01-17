@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,8 +14,10 @@ import android.widget.EditText;
 
 import com.koakh.androidrealmobjectserverstartup.App;
 import com.koakh.androidrealmobjectserverstartup.R;
+import com.koakh.androidrealmobjectserverstartup.model.TimeStamp;
 import com.koakh.androidrealmobjectserverstartup.model.User;
-import com.koakh.androidrealmobjectserverstartup.view.RecyclerViewWithEmptyViewSupport;
+import com.koakh.androidrealmobjectserverstartup.recycleview.DividerItemDecoration;
+import com.koakh.androidrealmobjectserverstartup.recycleview.RecyclerViewAdapter;
 
 import io.realm.Realm;
 import io.realm.SyncUser;
@@ -40,12 +44,13 @@ public class RecycleViewFragment extends Fragment {
 
   //Application
   private App mApp;
+  private Context mContext;
   //Realm
   private Realm mRealm;
   private SyncUser mSyncUser;
   //UI
   private EditText mEditText;
-  private RecyclerViewWithEmptyViewSupport mRecyclerView;
+  private RecyclerView mRecyclerView;
 
   public RecycleViewFragment() {
     // Required empty public constructor
@@ -78,13 +83,22 @@ public class RecycleViewFragment extends Fragment {
     }
 
     //Application
-    mApp = (App) getActivity().getApplicationContext();
-    //Get Realm
+    mApp = (App) getActivity().getApplication();
+    mContext = getActivity().getApplicationContext();
+
+    //Init Realm
     mSyncUser = SyncUser.currentUser();
     if (mSyncUser != null) {
-      mRealm = Realm.getInstance(mApp.getRealmConfiguration(mSyncUser));
+      //Assign SyncUser to App
+      mApp.setSyncUser(mSyncUser);
+      mApp.setupRealmConfiguration(mSyncUser);
+      mRealm = mApp.getRealm();
       Log.d(App.TAG, String.format("onCreate: %s", mRealm.where(User.class).count()));
     }
+
+    //Get Realm
+    //mRealm = Realm.getInstance(mApp.getRealmConfiguration(mApp.getSyncUser()));
+    mRealm = mApp.getRealm();
   }
 
   @Override
@@ -98,10 +112,8 @@ public class RecycleViewFragment extends Fragment {
     //return inflater.inflate(R.layout.fragment_recycle_view, container, false);
 
     View rootView = inflater.inflate(R.layout.fragment_recycle_view, container, false);
-    mRecyclerView = (RecyclerViewWithEmptyViewSupport) rootView.findViewById(R.id.recyclerview);
-
-    //Get Realm
-    //mRealm = Realm.getInstance(mApp.getRealmConfiguration(mApp.getSyncUser()));
+    mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
+    setUpRecyclerView();
 
     return rootView;
   }
@@ -143,5 +155,25 @@ public class RecycleViewFragment extends Fragment {
   public interface OnFragmentInteractionListener {
     // TODO: Update argument type and name
     void onFragmentInteraction(Uri uri);
+  }
+
+  private void setUpRecyclerView() {
+
+    mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
+    mRecyclerView.setAdapter(new RecyclerViewAdapter(this, mRealm.where(TimeStamp.class).findAll()));//findAllAsync()
+    mRecyclerView.setHasFixedSize(true);
+    mRecyclerView.addItemDecoration(new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL_LIST));
+  }
+
+  public void deleteItem(TimeStamp item) {
+    final String id = item.getTimeStamp();
+    mRealm.executeTransactionAsync(new Realm.Transaction() {
+      @Override
+      public void execute(Realm realm) {
+        realm.where(TimeStamp.class).equalTo(TimeStamp.TIMESTAMP, id)
+            .findAll()
+            .deleteAllFromRealm();
+      }
+    });
   }
 }

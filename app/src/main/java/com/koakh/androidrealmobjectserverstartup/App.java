@@ -22,6 +22,8 @@ public class App extends Application {
   public static final byte[] REALM_DB_ENCKEY = "6DA3651B4BB532A984CCA92B530AD6EF174FB400ABCEA1CF76F6029627C8934B".getBytes();
   public static boolean REALM_DB_DELETE_ON_START = false;
 
+  public Realm mRealm;
+  public SyncConfiguration mSyncConfiguration;
   private SyncUser mSyncUser;
 
   @Override
@@ -38,13 +40,23 @@ public class App extends Application {
     }
   }
 
-  public SyncConfiguration getRealmConfiguration(SyncUser syncUser) {
+  public Realm getRealm() {
+    return mRealm;
+  }
 
-    SyncConfiguration result = null;
+  public void setSyncUser(SyncUser mSyncUser) {
+    this.mSyncUser = mSyncUser;
+  }
 
+  public SyncUser getSyncUser() {
+    return mSyncUser;
+  }
+
+  //One Time SetupRealm
+  public void setupRealmConfiguration(SyncUser syncUser) {
     try {
       // Create a RealmConfiguration for our user
-      SyncConfiguration config = new SyncConfiguration.Builder(syncUser, App.REALM_URL)
+      mSyncConfiguration = new SyncConfiguration.Builder(syncUser, App.REALM_URL)
           .encryptionKey(App.REALM_DB_ENCKEY)
           //Executed When Create Database in FirstTime
           .initialData(new Realm.Transaction() {
@@ -63,20 +75,10 @@ public class App extends Application {
             }
           })
           .build();
-
-      result = config;
+      // Setup Realm Singleton
+      mRealm = Realm.getInstance(mSyncConfiguration);
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-    return result;
-  }
-
-  public SyncUser getSyncUser() {
-    return mSyncUser;
-  }
-
-  public void setSyncUser(SyncUser mSyncUser) {
-    this.mSyncUser = mSyncUser;
   }
 }

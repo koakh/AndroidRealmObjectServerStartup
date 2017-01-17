@@ -6,6 +6,7 @@
   <string name="navigation_drawer_close">Close navigation drawer</string>
 
   <string name="action_settings">Settings</string>
+  <string name="action_add">Add</string>
 
   <string name="realm_login_invalid_user_and_password">Invalid Username or Password</string>
   <string name="realm_login_authenticating">Authenticating...</string>
