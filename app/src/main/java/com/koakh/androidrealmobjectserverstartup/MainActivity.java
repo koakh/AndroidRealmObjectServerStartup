@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity
               realm.createObject(TimeStamp.class).setTimeStamp(mTextView.getText().toString());
             }
           });
+          mTextView.setText(null);
           Snackbar.make(view, "Added Record to Realm", Snackbar.LENGTH_LONG)
               .setAction("Action", null).show();
         }

@@ -95,10 +95,6 @@ public class RecycleViewFragment extends Fragment {
       mRealm = mApp.getRealm();
       Log.d(App.TAG, String.format("onCreate: %s", mRealm.where(User.class).count()));
     }
-
-    //Get Realm
-    //mRealm = Realm.getInstance(mApp.getRealmConfiguration(mApp.getSyncUser()));
-    mRealm = mApp.getRealm();
   }
 
   @Override
@@ -112,8 +108,11 @@ public class RecycleViewFragment extends Fragment {
     //return inflater.inflate(R.layout.fragment_recycle_view, container, false);
 
     View rootView = inflater.inflate(R.layout.fragment_recycle_view, container, false);
-    mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
-    setUpRecyclerView();
+
+    if (mSyncUser != null) {
+      mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
+      setUpRecyclerView();
+    }
 
     return rootView;
   }
